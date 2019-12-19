@@ -839,7 +839,7 @@ int hdd_wlan_get_freq(v_U32_t channel, v_U32_t *pfreq)
             if (channel == freq_chan_map[i].chan)
             {
                 *pfreq = freq_chan_map[i].freq;
-                return 1;
+                return 0;
             }
         }
     }
@@ -912,7 +912,7 @@ hdd_IsAuthTypeRSN( tHalHandle halHandle, eCsrAuthType authType)
 
 
 struct snr_priv {
-  int8_t snr;
+	int8_t snr;
 };
 
 /**
@@ -926,47 +926,47 @@ struct snr_priv {
  */
 static void hdd_get_snr_cb(tANI_S8 snr, tANI_U32 staId, void *context)
 {
-  struct hdd_request *request;
-  struct snr_priv *priv;
+	struct hdd_request *request;
+	struct snr_priv *priv;
 
-  request = hdd_request_get(context);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    return;
-  }
+	request = hdd_request_get(context);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		return;
+	}
 
-  /* propagate response back to requesting thread */
-  priv = hdd_request_priv(request);
-  priv->snr = snr;
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	/* propagate response back to requesting thread */
+	priv = hdd_request_priv(request);
+	priv->snr = snr;
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 struct rssi_priv {
-  v_S7_t rssi;
+	v_S7_t rssi;
 };
 
 static void hdd_get_rssi_cb( v_S7_t rssi, tANI_U32 staId, void *context )
 {
-  struct hdd_request *request;
-  struct rssi_priv *priv;
+	struct hdd_request *request;
+	struct rssi_priv *priv;
 
-  if (ioctl_debug) {
-    pr_info("%s: rssi [%d] STA [%d] context [%pK]\n",
-      __func__, (int)rssi, (int)staId, context);
-  }
+	if (ioctl_debug) {
+		pr_info("%s: rssi [%d] STA [%d] context [%pK]\n",
+			__func__, (int)rssi, (int)staId, context);
+	}
 
-  request = hdd_request_get(context);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    return;
-  }
+	request = hdd_request_get(context);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		return;
+	}
 
-  priv = hdd_request_priv(request);
-  priv->rssi = rssi;
+	priv = hdd_request_priv(request);
+	priv->rssi = rssi;
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 VOS_STATUS wlan_hdd_get_rssi(hdd_adapter_t *pAdapter, v_S7_t *rssi_value)
@@ -1841,7 +1841,7 @@ static int __iw_get_freq(struct net_device *dev,
        else
        {
            status = hdd_wlan_get_freq(channel, &freq);
-           if( TRUE == status )
+           if( 0 == status )
            {
                /* Set Exponent parameter as 6 (MHZ) in struct iw_freq
                 * iwlist & iwconfig command shows frequency into proper
@@ -3063,34 +3063,34 @@ void hdd_tx_per_hit_cb (void *pCallbackContext)
 
 void hdd_get_class_a_statistics_cb(void *stats, void *context)
 {
-  struct hdd_request *request;
-  struct stats_class_a_ctx *priv;
+	struct hdd_request *request;
+	struct stats_class_a_ctx *priv;
 
-  if (ioctl_debug) {
-    pr_info("%s: stats [%pK] context [%pK]\n",
-      __func__, stats, context);
-  }
+	if (ioctl_debug) {
+		pr_info("%s: stats [%pK] context [%pK]\n",
+			__func__, stats, context);
+	}
 
-  if (NULL == stats) {
-    hddLog(VOS_TRACE_LEVEL_ERROR,
-      "%s: Bad param, stats [%pK]",
-       __func__, stats);
-    return;
-  }
+	if (NULL == stats) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+			"%s: Bad param, stats [%pK]",
+			 __func__, stats);
+		return;
+	}
 
-  request = hdd_request_get(context);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    return;
-  }
+	request = hdd_request_get(context);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		return;
+	}
 
-  priv = hdd_request_priv(request);
+	priv = hdd_request_priv(request);
 
-  /* copy over the stats. do so as a struct copy */
-  priv->class_a_stats = *(tCsrGlobalClassAStatsInfo *)stats;
+	/* copy over the stats. do so as a struct copy */
+	priv->class_a_stats = *(tCsrGlobalClassAStatsInfo *)stats;
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 VOS_STATUS  wlan_hdd_get_classAstats(hdd_adapter_t *pAdapter)
@@ -3170,47 +3170,47 @@ VOS_STATUS  wlan_hdd_get_classAstats(hdd_adapter_t *pAdapter)
 }
 
 struct stats_ctx {
-  tCsrSummaryStatsInfo summary_stats;
-  tCsrGlobalClassAStatsInfo class_a_stats;
+	tCsrSummaryStatsInfo summary_stats;
+	tCsrGlobalClassAStatsInfo class_a_stats;
 };
 
 static void hdd_get_station_statistics_cb(void *stats, void *context)
 {
-  tCsrSummaryStatsInfo *summary_stats;
-  tCsrGlobalClassAStatsInfo *class_a_stats;
-  struct hdd_request *request;
-  struct stats_ctx *priv;
+	tCsrSummaryStatsInfo *summary_stats;
+	tCsrGlobalClassAStatsInfo *class_a_stats;
+	struct hdd_request *request;
+	struct stats_ctx *priv;
 
 
-  if (ioctl_debug) {
-    pr_info("%s: stats [%pK] context [%pK]\n",
-      __func__, stats, context);
-  }
+	if (ioctl_debug) {
+		pr_info("%s: stats [%pK] context [%pK]\n",
+			__func__, stats, context);
+	}
 
-  if (NULL == stats) {
-    hddLog(VOS_TRACE_LEVEL_ERROR,
-      "%s: Bad param, stats [%pK]",
-      __func__, stats);
-    return;
-  }
+	if (NULL == stats) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+			"%s: Bad param, stats [%pK]",
+			__func__, stats);
+		return;
+	}
 
-  request = hdd_request_get(context);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    return;
-  }
+	request = hdd_request_get(context);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		return;
+	}
 
-  summary_stats = (tCsrSummaryStatsInfo *)stats;
-  class_a_stats  = (tCsrGlobalClassAStatsInfo *)(summary_stats + 1);
+	summary_stats = (tCsrSummaryStatsInfo *)stats;
+	class_a_stats  = (tCsrGlobalClassAStatsInfo *)(summary_stats + 1);
 
-  priv = hdd_request_priv(request);
+	priv = hdd_request_priv(request);
 
-  /* copy over the stats. do so as a struct copy */
-  priv->summary_stats = *summary_stats;
-  priv->class_a_stats = *class_a_stats;
+	/* copy over the stats. do so as a struct copy */
+	priv->summary_stats = *summary_stats;
+	priv->class_a_stats = *class_a_stats;
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 VOS_STATUS  wlan_hdd_get_station_stats(hdd_adapter_t *pAdapter)
@@ -3726,16 +3726,16 @@ hdd_encrypt_msg_cb(v_VOID_t *pUserData, v_VOID_t *pEncInfoRsp)
  */
 static void iw_power_callback_func(void *context, eHalStatus status)
 {
-  struct hdd_request *request = hdd_request_get(context);
+	struct hdd_request *request = hdd_request_get(context);
 
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR,
-        "%s: Obsolete request", __func__);
-    return;
-  }
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+				"%s: Obsolete request", __func__);
+		return;
+	}
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 VOS_STATUS  wlan_hdd_enter_bmps(hdd_adapter_t *pAdapter, int mode)
@@ -5340,168 +5340,168 @@ static int hdd_set_dynamic_aggregation(int value, hdd_adapter_t *adapter)
 
 static int
 wlan_hdd_sta_mon_op(hdd_context_t *hdd_ctx, uint32_t set_value,
-        hdd_adapter_t *mon_adapter, hdd_mon_ctx_t *mon_ctx)
+		    hdd_adapter_t *mon_adapter, hdd_mon_ctx_t *mon_ctx)
 {
-  hdd_station_ctx_t *sta_ctx;
-  VOS_STATUS disable_bmps_status;
-  hdd_adapter_t *sta_adapter;
-  v_CONTEXT_t vos_ctx = (WLAN_HDD_GET_CTX(mon_adapter))->pvosContext;
+	hdd_station_ctx_t *sta_ctx;
+	VOS_STATUS disable_bmps_status;
+	hdd_adapter_t *sta_adapter;
+	v_CONTEXT_t vos_ctx = (WLAN_HDD_GET_CTX(mon_adapter))->pvosContext;
 
-  if (!test_bit(DEVICE_IFACE_OPENED, &mon_adapter->event_flags)) {
-    hddLog(LOGE, FL("Monitor Interface is not OPENED"));
-    return -EINVAL;
-  }
+	if (!test_bit(DEVICE_IFACE_OPENED, &mon_adapter->event_flags)) {
+		hddLog(LOGE, FL("Monitor Interface is not OPENED"));
+		return -EINVAL;
+	}
 
-  if (set_value == MON_MODE_STOP) {
-    if (wlan_hdd_check_monitor_state(hdd_ctx))
-      return 0;
-    return -EINVAL;
-  }
+	if (set_value == MON_MODE_STOP) {
+		if (wlan_hdd_check_monitor_state(hdd_ctx))
+			return 0;
+		return -EINVAL;
+	}
 
-  sta_adapter = hdd_get_adapter(hdd_ctx, WLAN_HDD_INFRA_STATION);
-  if (!sta_adapter) {
-    hddLog(LOGE, FL("No Station adapter"));
-    return -EINVAL;
-  }
+	sta_adapter = hdd_get_adapter(hdd_ctx, WLAN_HDD_INFRA_STATION);
+	if (!sta_adapter) {
+		hddLog(LOGE, FL("No Station adapter"));
+		return -EINVAL;
+	}
 
-  sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(sta_adapter);
-  if (!sta_ctx || !hdd_connIsConnected(sta_ctx)) {
-    hddLog(LOGE, FL("STA is not connected"));
-    return -EINVAL;
-  }
+	sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(sta_adapter);
+	if (!sta_ctx || !hdd_connIsConnected(sta_ctx)) {
+		hddLog(LOGE, FL("STA is not connected"));
+		return -EINVAL;
+	}
 
-  if (hdd_isConnectionInProgress(hdd_ctx, NULL, NULL)) {
-    hddLog(LOGE, FL("Roaming or set-key is in progress"));
-    return -EBUSY;
-  }
+	if (hdd_isConnectionInProgress(hdd_ctx, NULL, NULL)) {
+		hddLog(LOGE, FL("Roaming or set-key is in progress"));
+		return -EBUSY;
+	}
 
-  hdd_disable_roaming(hdd_ctx);
+	hdd_disable_roaming(hdd_ctx);
 
-  hddLog(LOG1, FL("Disable BMPS"));
-  disable_bmps_status = hdd_disable_bmps_imps(hdd_ctx,
-                WLAN_HDD_INFRA_STATION);
-  if (disable_bmps_status != VOS_STATUS_SUCCESS) {
-    hddLog(LOGE, FL("Cannot start monitor mode"));
-    hdd_restore_roaming(hdd_ctx);
-    return -EINVAL;
-  }
+	hddLog(LOG1, FL("Disable BMPS"));
+	disable_bmps_status = hdd_disable_bmps_imps(hdd_ctx,
+						    WLAN_HDD_INFRA_STATION);
+	if (disable_bmps_status != VOS_STATUS_SUCCESS) {
+		hddLog(LOGE, FL("Cannot start monitor mode"));
+		hdd_restore_roaming(hdd_ctx);
+		return -EINVAL;
+	}
 
-  mon_ctx->ChannelNo = sta_ctx->conn_info.operationChannel;
+	mon_ctx->ChannelNo = sta_ctx->conn_info.operationChannel;
 
-  /*
-   * In STA + Mon mode, firmware should not consider ChannelBW
-   */
-  mon_ctx->ChannelBW = 0;
-  mon_ctx->crcCheckEnabled = 0;
-  wlan_hdd_mon_set_typesubtype(mon_ctx, 100);
-  mon_ctx->is80211to803ConReq = 0;
-  WLANTL_SetIsConversionReq(vos_ctx, 0);
-  mon_adapter->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+	/*
+	 * In STA + Mon mode, firmware should not consider ChannelBW
+	 */
+	mon_ctx->ChannelBW = 0;
+	mon_ctx->crcCheckEnabled = 0;
+	wlan_hdd_mon_set_typesubtype(mon_ctx, 100);
+	mon_ctx->is80211to803ConReq = 0;
+	WLANTL_SetIsConversionReq(vos_ctx, 0);
+	mon_adapter->dev->type = ARPHRD_IEEE80211_RADIOTAP;
 
-  mon_ctx->state = MON_MODE_START;
-  return 0;
+	mon_ctx->state = MON_MODE_START;
+	return 0;
 }
 
 /* set param sub-ioctls */
 static int __iw_mon_setint_getnone(struct net_device *dev,
-           struct iw_request_info *info,
-           union iwreq_data *wrqu, char *extra)
+				   struct iw_request_info *info,
+				   union iwreq_data *wrqu, char *extra)
 {
-  hdd_adapter_t *adapter;
-  hdd_context_t *hdd_ctx;
-  hdd_mon_ctx_t *mon_ctx;
-  int *value = (int *)extra;
-  int sub_cmd = value[0];
-  int set_value = value[1];
-  int ret = 0; /* success */
-  tVOS_CONCURRENCY_MODE concurrency_mode;
+	hdd_adapter_t *adapter;
+	hdd_context_t *hdd_ctx;
+	hdd_mon_ctx_t *mon_ctx;
+	int *value = (int *)extra;
+	int sub_cmd = value[0];
+	int set_value = value[1];
+	int ret = 0; /* success */
+	tVOS_CONCURRENCY_MODE concurrency_mode;
 
-  ENTER();
-  adapter = WLAN_HDD_GET_PRIV_PTR(dev);
-  if (!adapter || adapter->device_mode != WLAN_HDD_MONITOR)
-    return -EINVAL;
+	ENTER();
+	adapter = WLAN_HDD_GET_PRIV_PTR(dev);
+	if (!adapter || adapter->device_mode != WLAN_HDD_MONITOR)
+		return -EINVAL;
 
-  hdd_ctx = WLAN_HDD_GET_CTX(adapter);
-  ret = wlan_hdd_validate_context(hdd_ctx);
-  if (ret)
-    return ret;
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	ret = wlan_hdd_validate_context(hdd_ctx);
+	if (ret)
+		return ret;
 
-  concurrency_mode = hdd_ctx->concurrency_mode;
-  if (concurrency_mode != VOS_STA_MON) {
-    hddLog(LOGE, "invalid concurrency mode %d", concurrency_mode);
-    return -EINVAL;
-  }
+	concurrency_mode = hdd_ctx->concurrency_mode;
+	if (concurrency_mode != VOS_STA_MON) {
+		hddLog(LOGE, "invalid concurrency mode %d", concurrency_mode);
+		return -EINVAL;
+	}
 
-  switch(sub_cmd) {
+	switch(sub_cmd) {
 
-  case WE_SET_MONITOR_STATE:
-    {
-      void *cookie;
-      struct hdd_request *request;
-      static const struct hdd_request_params params = {
-        .priv_size = 0,
-        .timeout_ms = MON_MODE_MSG_TIMEOUT,
-      };
+	case WE_SET_MONITOR_STATE:
+		{
+			void *cookie;
+			struct hdd_request *request;
+			static const struct hdd_request_params params = {
+				.priv_size = 0,
+				.timeout_ms = MON_MODE_MSG_TIMEOUT,
+			};
 
-      mon_ctx = WLAN_HDD_GET_MONITOR_CTX_PTR(adapter);
-      if(!mon_ctx) {
-        hddLog(LOGE, "Monitor Context NULL");
-        ret = -EIO;
-        break;
-      }
+			mon_ctx = WLAN_HDD_GET_MONITOR_CTX_PTR(adapter);
+			if(!mon_ctx) {
+				hddLog(LOGE, "Monitor Context NULL");
+				ret = -EIO;
+				break;
+			}
 
-      if (mon_ctx->state == set_value) {
-        hddLog(LOGE, FL("already in same mode curr_mode:%d req_mode: %d"),
-               mon_ctx->state, set_value);
-        break;
-      }
+			if (mon_ctx->state == set_value) {
+				hddLog(LOGE, FL("already in same mode curr_mode:%d req_mode: %d"),
+				       mon_ctx->state, set_value);
+				break;
+			}
 
-      ret = wlan_hdd_sta_mon_op(hdd_ctx, set_value,
-              adapter,mon_ctx);
-      if (ret)
-        break;
+			ret = wlan_hdd_sta_mon_op(hdd_ctx, set_value,
+						  adapter,mon_ctx);
+			if (ret)
+				break;
 
-      mon_ctx->state = set_value;
-      request = hdd_request_alloc(&params);
-      if (!request) {
-        hddLog(VOS_TRACE_LEVEL_ERROR, FL("Request allocation failure"));
-        ret = -ENOMEM;
-        break;
-      }
-      cookie = hdd_request_cookie(request);
-      if (wlan_hdd_mon_postMsg(cookie, mon_ctx,
-             hdd_mon_post_msg_cb)
-        != VOS_STATUS_SUCCESS) {
-        hddLog(LOGE, FL("failed to post MON MODE REQ"));
-        mon_ctx->state =
-          (mon_ctx->state==MON_MODE_START) ?
-          MON_MODE_STOP : MON_MODE_START;
-        ret = -EIO;
-      } else {
-        ret = hdd_request_wait_for_response(request);
-        if (ret){
-          hddLog(LOGE, FL("failed to wait on monitor mode completion %d"),
-              ret);
-        } else if (mon_ctx->state == MON_MODE_STOP) {
-          hddLog(LOG1, FL("Enable BMPS"));
-          hdd_enable_bmps_imps(hdd_ctx);
-          hdd_restore_roaming(hdd_ctx);
-        }
-      }
-      hdd_request_put(request);
-    }
-    break;
+			mon_ctx->state = set_value;
+			request = hdd_request_alloc(&params);
+			if (!request) {
+				hddLog(VOS_TRACE_LEVEL_ERROR, FL("Request allocation failure"));
+				ret = -ENOMEM;
+				break;
+			}
+			cookie = hdd_request_cookie(request);
+			if (wlan_hdd_mon_postMsg(cookie, mon_ctx,
+						 hdd_mon_post_msg_cb)
+				!= VOS_STATUS_SUCCESS) {
+				hddLog(LOGE, FL("failed to post MON MODE REQ"));
+				mon_ctx->state =
+					(mon_ctx->state==MON_MODE_START) ?
+					MON_MODE_STOP : MON_MODE_START;
+				ret = -EIO;
+			} else {
+				ret = hdd_request_wait_for_response(request);
+				if (ret){
+					hddLog(LOGE, FL("failed to wait on monitor mode completion %d"),
+							ret);
+				} else if (mon_ctx->state == MON_MODE_STOP) {
+					hddLog(LOG1, FL("Enable BMPS"));
+					hdd_enable_bmps_imps(hdd_ctx);
+					hdd_restore_roaming(hdd_ctx);
+				}
+			}
+			hdd_request_put(request);
+		}
+		break;
 
-  default:
-    {
-      hddLog(LOGE, "Invalid IOCTL setvalue command %d value %d",
-             sub_cmd, set_value);
-    }
-    break;
-  }
+	default:
+		{
+			hddLog(LOGE, "Invalid IOCTL setvalue command %d value %d",
+			       sub_cmd, set_value);
+		}
+		break;
+	}
 
-  EXIT();
-  return ret;
+	EXIT();
+	return ret;
 }
 
 /* set param sub-ioctls */
@@ -6254,16 +6254,16 @@ static int iw_setint_getnone(struct net_device *dev,
 
 static
 int iw_mon_setint_getnone(struct net_device *dev,
-        struct iw_request_info *info,
-        union iwreq_data *wrqu, char *extra)
+			  struct iw_request_info *info,
+			  union iwreq_data *wrqu, char *extra)
 {
-  int ret;
+	int ret;
 
-  vos_ssr_protect(__func__);
-  ret = __iw_mon_setint_getnone(dev, info, wrqu, extra);
-  vos_ssr_unprotect(__func__);
+	vos_ssr_protect(__func__);
+	ret = __iw_mon_setint_getnone(dev, info, wrqu, extra);
+	vos_ssr_unprotect(__func__);
 
-  return 0;
+	return 0;
 }
 
 /* set param sub-ioctls */
@@ -6460,25 +6460,25 @@ static int iw_setchar_getnone(struct net_device *dev,
 }
 
 struct get_antenna_idx_priv {
-  int antenna_id;
+	int antenna_id;
 };
 
 static void hdd_get_current_antenna_index_cb(int antenna_id, void *context)
 {
-  struct hdd_request *request;
-  struct get_antenna_idx_priv *priv;
+	struct hdd_request *request;
+	struct get_antenna_idx_priv *priv;
 
-  request = hdd_request_get(context);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    return;
-  }
+	request = hdd_request_get(context);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		return;
+	}
 
-  priv = hdd_request_priv(request);
-  priv->antenna_id = antenna_id;
+	priv = hdd_request_priv(request);
+	priv->antenna_id = antenna_id;
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 
 }
 
@@ -6849,7 +6849,7 @@ static int __iw_get_char_setnone(struct net_device *dev,
             hdd_wlan_get_version(pAdapter, wrqu, extra);
             break;
         }
-#ifdef TRACE_RECORD
+
         case WE_GET_STATS:
         {
             tHalHandle hHal = NULL;
@@ -7003,6 +7003,7 @@ static int __iw_get_char_setnone(struct net_device *dev,
    *And currently it only checks P2P_CLIENT adapter.
    *P2P_DEVICE and P2P_GO have not been added as of now.
 */
+#ifdef TRACE_RECORD
         case WE_GET_STATES:
         {
             int buf = 0, len = 0;
@@ -7140,7 +7141,7 @@ static int __iw_get_char_setnone(struct net_device *dev,
             break;
         }
 #endif
-
+        
         case WE_GET_CFG:
         {
             hdd_cfg_get_config(WLAN_HDD_GET_CTX(pAdapter), extra, WE_MAX_STR_LEN);
@@ -9026,21 +9027,21 @@ static int iw_set_keepalive_params(struct net_device *dev,
   --------------------------------------------------------------------------*/
 static void hdd_pkt_filter_done(void *data, v_U32_t status)
 {
-  struct hdd_request *request;
+	struct hdd_request *request;
 
-  hddLog(VOS_TRACE_LEVEL_INFO,
-    FL("Pkt Filter Clear Status : %d"), status);
+	hddLog(VOS_TRACE_LEVEL_INFO,
+		FL("Pkt Filter Clear Status : %d"), status);
 
-  request = hdd_request_get(data);
-  if (!request) {
-    hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
-    if (ioctl_debug)
-      pr_info("%s: Obsolete request", __func__);
-    return;
-  }
+	request = hdd_request_get(data);
+	if (!request) {
+		hddLog(VOS_TRACE_LEVEL_ERROR, FL("Obsolete request"));
+		if (ioctl_debug)
+			pr_info("%s: Obsolete request", __func__);
+		return;
+	}
 
-  hdd_request_complete(request);
-  hdd_request_put(request);
+	hdd_request_complete(request);
+	hdd_request_put(request);
 }
 
 int wlan_hdd_set_filter(hdd_adapter_t *pAdapter, tpPacketFilterCfg pRequest)
@@ -9166,6 +9167,7 @@ int wlan_hdd_set_filter(hdd_adapter_t *pAdapter, tpPacketFilterCfg pRequest)
             {
                 hddLog(VOS_TRACE_LEVEL_ERROR, "%s: Failure to execute Clear Filter",
                         __func__);
+                hdd_request_put(request);
                 return -EINVAL;
             }
 
@@ -11031,17 +11033,17 @@ static const iw_handler we_private[] = {
 };
 
 static const iw_handler we_mon_private[] = {
-  [WLAN_PRIV_SET_INT_GET_NONE - SIOCIWFIRSTPRIV] =
-          iw_mon_setint_getnone,
+	[WLAN_PRIV_SET_INT_GET_NONE - SIOCIWFIRSTPRIV] =
+					iw_mon_setint_getnone,
 };
 
 static const struct iw_priv_args we_mon_private_args[] = {
-  {WE_SET_MONITOR_STATE, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
-   0, "monitor"},
+	{WE_SET_MONITOR_STATE, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
+	 0, "monitor"},
 
-  /* handlers for main ioctl */
-  {WLAN_PRIV_SET_INT_GET_NONE, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
-   0, "" },
+	/* handlers for main ioctl */
+	{WLAN_PRIV_SET_INT_GET_NONE, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
+	 0, "" },
 };
 
 /*Maximum command length can be only 15 */
@@ -11654,14 +11656,14 @@ const struct iw_handler_def we_handler_def = {
 };
 
 const struct iw_handler_def we_mon_handler_def = {
-  .num_standard = 0,
-  .num_private  = sizeof(we_mon_private) / sizeof(we_mon_private[0]),
-  .num_private_args =
-    sizeof(we_mon_private_args) / sizeof(we_mon_private_args[0]),
-  .standard = NULL,
-  .private = (iw_handler *)we_mon_private,
-  .private_args = we_mon_private_args,
-  .get_wireless_stats = NULL,
+	.num_standard = 0,
+	.num_private  = sizeof(we_mon_private) / sizeof(we_mon_private[0]),
+	.num_private_args =
+		sizeof(we_mon_private_args) / sizeof(we_mon_private_args[0]),
+	.standard = NULL,
+	.private = (iw_handler *)we_mon_private,
+	.private_args = we_mon_private_args,
+	.get_wireless_stats = NULL,
 };
 
 int hdd_validate_mcc_config(hdd_adapter_t *pAdapter, v_UINT_t staId, v_UINT_t arg1, v_UINT_t arg2, v_UINT_t arg3)

@@ -2540,6 +2540,30 @@ static VOS_STATUS sme_ecsa_msg_processor(tpAniSirGlobal mac_ctx,
    return VOS_STATUS_SUCCESS;
 }
 
+static bool sme_get_sessionid_from_scan_cmd(tpAniSirGlobal mac,
+    tANI_U32  *session_id)
+{
+    tListElem *entry = NULL;
+    tSmeCmd *command = NULL;
+    bool active_scan = false;
+
+    if (!mac->fScanOffload) {
+        entry = csrLLPeekHead(&mac->sme.smeCmdActiveList, LL_ACCESS_LOCK);
+    } else {
+        entry = csrLLPeekHead(&mac->sme.smeScanCmdActiveList, LL_ACCESS_LOCK);
+    }
+
+    if (entry) {
+        command = GET_BASE_ADDR(entry, tSmeCmd, Link);
+        if (command->command == eSmeCommandScan) {
+            *session_id = command->sessionId;
+            active_scan = true;
+        }
+    }
+
+    return active_scan;
+}
+
 /*--------------------------------------------------------------------------
 
   \brief sme_ProcessMsg() - The main message processor for SME.
@@ -2736,11 +2760,18 @@ eHalStatus sme_ProcessMsg(tHalHandle hHal, vos_msg_t* pMsg)
                 {
                    tSirSmeCoexInd *pSmeCoexInd = (tSirSmeCoexInd *)pMsg->bodyptr;
                    vos_msg_t vosMessage = {0};
+                   tANI_U32 session_id = 0;
+                   bool active_scan;
 
                    if (pSmeCoexInd->coexIndType == SIR_COEX_IND_TYPE_DISABLE_AGGREGATION_IN_2p4)
                    {
                        pMac->btc.agg_disabled = true;
                        smsLog( pMac, LOG1, FL("SIR_COEX_IND_TYPE_DISABLE_AGGREGATION_IN_2p4"));
+                       active_scan = sme_get_sessionid_from_scan_cmd(pMac,
+                                                                   &session_id);
+                       if (active_scan)
+                           sme_AbortMacScan(hHal, session_id,
+                                            eCSR_SCAN_ABORT_DEFAULT);
                        sme_RequestFullPower(hHal, NULL, NULL, eSME_REASON_OTHER);
                        pMac->isCoexScoIndSet = 1;
                        pMac->scan.fRestartIdleScan = eANI_BOOLEAN_FALSE;
@@ -6151,7 +6182,7 @@ eHalStatus sme_ChangeCountryCode( tHalHandle hHal,
 
           smsLog(pMac, LOGW, "Set Country Code Fail since the STA is associated and userspace does not have priority ");
 
-      sme_ReleaseGlobalLock( &pMac->sme );
+	  sme_ReleaseGlobalLock( &pMac->sme );
           status = eHAL_STATUS_FAILURE;
           return status;
       }
@@ -14764,51 +14795,51 @@ eHalStatus sme_set_sap_auth_offload(tHalHandle hHal,
  * @dhcp_srv_info: pointer to dhcp server info
  *
  * Return: eHalStatus
- *  eHAL_STATUS_SUCCESS - success or else failure code
+ *	eHAL_STATUS_SUCCESS - success or else failure code
  */
 eHalStatus sme_set_dhcp_srv_offload(tHalHandle hal,
-                    sir_dhcp_srv_offload_info_t *dhcp_srv_info)
+				    sir_dhcp_srv_offload_info_t *dhcp_srv_info)
 {
-    vos_msg_t vos_msg;
-    eHalStatus status = eHAL_STATUS_SUCCESS;
-    tpAniSirGlobal mac = PMAC_STRUCT(hal);
-    sir_dhcp_srv_offload_info_t *dhcp_serv_info = NULL;
+	vos_msg_t vos_msg;
+	eHalStatus status = eHAL_STATUS_SUCCESS;
+	tpAniSirGlobal mac = PMAC_STRUCT(hal);
+	sir_dhcp_srv_offload_info_t *dhcp_serv_info = NULL;
 
-    dhcp_serv_info =
-        vos_mem_malloc(sizeof(*dhcp_serv_info));
-    if (NULL == dhcp_serv_info) {
-        VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-              "Failed to alloc memory");
-        return VOS_STATUS_E_NOMEM;
-    }
+	dhcp_serv_info =
+		vos_mem_malloc(sizeof(*dhcp_serv_info));
+	if (NULL == dhcp_serv_info) {
+		VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
+			  "Failed to alloc memory");
+		return VOS_STATUS_E_NOMEM;
+	}
 
-    vos_mem_copy(dhcp_serv_info, dhcp_srv_info,
-             sizeof(*dhcp_serv_info));
+	vos_mem_copy(dhcp_serv_info, dhcp_srv_info,
+		     sizeof(*dhcp_serv_info));
 
         dhcp_serv_info->bssidx = peFindBssIdxFromSmeSessionId(mac, dhcp_srv_info->bssidx);
-    status = sme_AcquireGlobalLock(&mac->sme);
-    if (eHAL_STATUS_SUCCESS == status) {
-        /* serialize the req through MC thread */
-        vos_msg.type = WDA_SET_DHCP_SERVER_OFFLOAD_REQ;
-        vos_msg.bodyptr = dhcp_serv_info;
+	status = sme_AcquireGlobalLock(&mac->sme);
+	if (eHAL_STATUS_SUCCESS == status) {
+		/* serialize the req through MC thread */
+		vos_msg.type = WDA_SET_DHCP_SERVER_OFFLOAD_REQ;
+		vos_msg.bodyptr = dhcp_serv_info;
 
-        if (!VOS_IS_STATUS_SUCCESS(vos_mq_post_message
-                       (VOS_MODULE_ID_WDA, &vos_msg))) {
-            VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-                  "%s: Not able to post WDA_SET_DHCP_SERVER_OFFLOAD_REQ to WDA!",
-                  __func__);
-            vos_mem_free(dhcp_serv_info);
-            status = eHAL_STATUS_FAILURE;
-        }
-        sme_ReleaseGlobalLock(&mac->sme);
-    } else {
-        VOS_TRACE( VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-               "%s: sme_AcquireGlobalLock error!",
-               __func__);
-        vos_mem_free(dhcp_serv_info);
-    }
+		if (!VOS_IS_STATUS_SUCCESS(vos_mq_post_message
+					   (VOS_MODULE_ID_WDA, &vos_msg))) {
+			VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
+				  "%s: Not able to post WDA_SET_DHCP_SERVER_OFFLOAD_REQ to WDA!",
+				  __func__);
+			vos_mem_free(dhcp_serv_info);
+			status = eHAL_STATUS_FAILURE;
+		}
+		sme_ReleaseGlobalLock(&mac->sme);
+	} else {
+		VOS_TRACE( VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
+			   "%s: sme_AcquireGlobalLock error!",
+			   __func__);
+		vos_mem_free(dhcp_serv_info);
+	}
 
-    return status;
+	return status;
 }
 #endif /* DHCP_SERVER_OFFLOAD */
 
